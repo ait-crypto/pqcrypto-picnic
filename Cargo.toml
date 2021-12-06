@@ -1,0 +1,35 @@
+[package]
+name = "pqcrypto-picnic"
+description = "Picnic implementation for `pqcrypto`"
+version = "0.1.0"
+authors = ["Sebastian Ramacher <sebastian.ramacher@ait.ac.at>"]
+homepage = "https://microsoft.github.io/Picnic/"
+license = "MIT"
+edition = "2021"
+rust-version ="1.56"
+keywords = ["signatures", "picnic"]
+categories = ["cryptography", "no-std"]
+
+[dependencies]
+picnic-bindings = { version = "0.4.1", default-features = false }
+pqcrypto-traits = { version = "0.3.4", default-features = false }
+paste = "1"
+serde = { package = "serde", version = "1", optional = true, default-features = false, features = ["derive"] }
+serde_bytes = { version = "0.11", optional = true, default-features = false, features = ["alloc"] }
+
+[dev-dependencies]
+serde_json = "1.0"
+serde-bytes-repr = "0.1"
+
+[features]
+default = ["std", "system", "static-fallback", "picnic", "picnic3"]
+picnic = ["picnic-bindings/picnic"]
+picnic3 = ["picnic-bindings/picnic3"]
+unruh-transform = ["picnic-bindings/unruh-transform"]
+system = ["picnic-bindings/system"]
+static-fallback = ["picnic-bindings/static-fallback"]
+serialization = ["picnic-bindings/serialization", "serde", "serde_bytes"]
+std = ["picnic-bindings/std", "pqcrypto-traits/std"]
+
+[package.metadata.docs.rs]
+all-features = true
