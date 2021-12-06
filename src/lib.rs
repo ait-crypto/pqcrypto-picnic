@@ -35,12 +35,12 @@ pub use pqcrypto_traits::{
     Error,
 };
 
-#[cfg(feature = "serde")]
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
 /// A Picnic secret key
 #[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct SecretKey<P>(SigningKey<P>)
 where
     P: Parameters;
@@ -70,7 +70,7 @@ where
 
 /// A Picnic public key
 #[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct PublicKey<P>(VerificationKey<P>)
 where
     P: Parameters;
@@ -103,8 +103,10 @@ where
 /// The message and its signature are encoded in the same way as for the NIST submission of Picnic.
 /// The length of the signature (u32 in big endian) is followed the message and then the signature.
 #[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct SignedMessage(#[cfg_attr(feature = "serde", serde(with = "serde_bytes"))] Vec<u8>);
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+pub struct SignedMessage(
+    #[cfg_attr(feature = "serialization", serde(with = "serde_bytes"))] Vec<u8>,
+);
 
 impl SignedMessage {
     /// Pack message and a signature into a signed message
@@ -154,7 +156,7 @@ impl sign::SignedMessage for SignedMessage {
 
 /// A detached signature
 #[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct DetachedSignature(DynamicSignature);
 
 impl sign::DetachedSignature for DetachedSignature {
