@@ -101,7 +101,7 @@ where
 /// A signed message
 ///
 /// The message and its signature are encoded in the same way as for the NIST submission of Picnic.
-/// The length of the signature (u32 in big endian) is followed the message and then the signature.
+/// The length of the signature (u32 in little endian) is followed the message and then the signature.
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct SignedMessage(
@@ -114,7 +114,7 @@ impl SignedMessage {
         let sig_data = sig.as_bytes();
 
         let mut data = Vec::with_capacity(mem::size_of::<u32>() + msg.len() + sig_data.len());
-        data.extend_from_slice(&(sig_data.len() as u32).to_be_bytes());
+        data.extend_from_slice(&(sig_data.len() as u32).to_le_bytes());
         data.extend_from_slice(msg);
         data.extend_from_slice(sig_data);
 
@@ -128,7 +128,7 @@ impl SignedMessage {
             return Err(VerificationError::InvalidSignature);
         }
 
-        let len = u32::from_be_bytes(self.0[..4].try_into().unwrap()) as usize;
+        let len = u32::from_le_bytes(self.0[..4].try_into().unwrap()) as usize;
         if sm_len < len + mem::size_of::<u32>() {
             return Err(VerificationError::InvalidSignature);
         }
