@@ -1,13 +1,13 @@
 [package]
 name = "pqcrypto-picnic"
 description = "Picnic implementation for `pqcrypto`"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Sebastian Ramacher <sebastian.ramacher@ait.ac.at>"]
 homepage = "https://microsoft.github.io/Picnic/"
 repository = "https://github.com/ait-crypto/pqcrypto-picnic"
 license = "MIT"
 edition = "2021"
-rust-version ="1.56"
+rust-version = "1.56"
 keywords = ["signatures", "picnic"]
 categories = ["cryptography", "no-std"]
 
@@ -15,8 +15,12 @@ categories = ["cryptography", "no-std"]
 picnic-bindings = { version = "0.4.1", default-features = false }
 pqcrypto-traits = { version = "0.3.4", default-features = false }
 paste = "1"
-serde = { package = "serde", version = "1", optional = true, default-features = false, features = ["derive"] }
-serde_bytes = { version = "0.11", optional = true, default-features = false, features = ["alloc"] }
+serde = { package = "serde", version = "1", optional = true, default-features = false, features = [
+    "derive",
+] }
+serde_bytes = { version = "0.11", optional = true, default-features = false, features = [
+    "alloc",
+] }
 
 [dev-dependencies]
 serde_json = "1.0"
