@@ -25,11 +25,11 @@ use alloc::vec::Vec;
 
 use core::mem;
 use paste::paste;
+pub use picnic_bindings::{self, Parameters};
 use picnic_bindings::{
     signature::{Signature, Signer, Verifier},
-    RawVerifier,
+    DynamicSignature, RawVerifier, SigningKey, VerificationKey,
 };
-pub use picnic_bindings::{DynamicSignature, Parameters, SigningKey, VerificationKey};
 pub use pqcrypto_traits::{
     sign::{self, VerificationError},
     Error,
