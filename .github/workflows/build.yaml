@@ -14,7 +14,6 @@ jobs:
         toolchain:
           - stable
           - beta
-          - nightly
     name: Test w. shared library (${{matrix.toolchain}} toolchain)
     steps:
       - uses: actions/checkout@v3
@@ -45,7 +44,6 @@ jobs:
         toolchain:
           - stable
           - beta
-          - nightly
         os:
           - ubuntu-latest
           - windows-latest
