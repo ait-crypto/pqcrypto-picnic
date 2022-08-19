@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0 (2022-08-19)
+
+* Reduce number of re-exports
+* Bump picnic-bindings to 0.5
+
 ## 0.0.2 (2022-04-05)
 
 * Fix representation of the signature's length.
