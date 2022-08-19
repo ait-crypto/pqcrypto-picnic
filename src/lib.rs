@@ -49,6 +49,7 @@ impl<P> sign::SecretKey for SecretKey<P>
 where
     P: Parameters,
 {
+    #[inline(always)]
     fn as_bytes(&self) -> &[u8] {
         self.0.as_ref()
     }
@@ -79,6 +80,7 @@ impl<P> sign::PublicKey for PublicKey<P>
 where
     P: Parameters,
 {
+    #[inline]
     fn as_bytes(&self) -> &[u8] {
         self.0.as_ref()
     }
@@ -142,10 +144,12 @@ impl SignedMessage {
 }
 
 impl sign::SignedMessage for SignedMessage {
+    #[inline]
     fn as_bytes(&self) -> &[u8] {
         self.0.as_slice()
     }
 
+    #[inline]
     fn from_bytes(bytes: &[u8]) -> pqcrypto_traits::Result<Self>
     where
         Self: Sized,
@@ -160,10 +164,12 @@ impl sign::SignedMessage for SignedMessage {
 pub struct DetachedSignature(DynamicSignature);
 
 impl sign::DetachedSignature for DetachedSignature {
+    #[inline]
     fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
     }
 
+    #[inline]
     fn from_bytes(bytes: &[u8]) -> pqcrypto_traits::Result<Self>
     where
         Self: Sized,
@@ -173,6 +179,7 @@ impl sign::DetachedSignature for DetachedSignature {
 }
 
 /// Generate a new Picnic key pair
+#[inline]
 pub(crate) fn keypair<P>() -> (SecretKey<P>, PublicKey<P>)
 where
     P: Parameters,
@@ -185,6 +192,7 @@ where
 }
 
 /// Sign a message
+#[inline]
 pub(crate) fn sign<P>(msg: &[u8], sk: &SecretKey<P>) -> SignedMessage
 where
     P: Parameters,
@@ -194,6 +202,7 @@ where
 }
 
 /// Verify a signed message and return the message on success
+#[inline]
 pub(crate) fn open<P>(sm: &SignedMessage, pk: &PublicKey<P>) -> Result<Vec<u8>, VerificationError>
 where
     P: Parameters,
@@ -206,6 +215,7 @@ where
 }
 
 /// Generate a detached signature
+#[inline]
 pub(crate) fn detached_sign<P>(msg: &[u8], sk: &SecretKey<P>) -> DetachedSignature
 where
     P: Parameters,
@@ -214,6 +224,7 @@ where
 }
 
 /// Verify a detached signature
+#[inline]
 pub(crate) fn verify_detached_signature<P>(
     sig: &DetachedSignature,
     msg: &[u8],
@@ -227,6 +238,7 @@ where
 }
 
 /// Get the number of bytes for a public key
+#[inline(always)]
 pub(crate) fn public_key_bytes<P>() -> usize
 where
     P: Parameters,
@@ -235,6 +247,7 @@ where
 }
 
 /// Get the number of bytes for a secret key
+#[inline(always)]
 pub(crate) fn secret_key_bytes<P>() -> usize
 where
     P: Parameters,
@@ -243,6 +256,7 @@ where
 }
 
 /// Get the maximum number of bytes a signature occupies
+#[inline(always)]
 pub(crate) fn signature_bytes<P>() -> usize
 where
     P: Parameters,
@@ -267,26 +281,31 @@ macro_rules! define_implementation {
                 pub type PublicKey = crate::PublicKey<$parameters>;
 
                 /// Generate a new Picnic key pair.
+                #[inline(always)]
                 pub fn keypair() -> (SecretKey, PublicKey) {
                     crate::keypair::<$parameters>()
                 }
 
                 /// Sign a message.
+                #[inline(always)]
                 pub fn sign(msg: &[u8], sk: &SecretKey) -> SignedMessage {
                     crate::sign(msg, sk)
                 }
 
                 /// Verify a signed message and return the message on success.
+                #[inline(always)]
                 pub fn open(sm: &SignedMessage, pk: &PublicKey) -> Result<Vec<u8>, VerificationError> {
                     crate::open(sm, pk)
                 }
 
                 /// Sign a message and generate a detached signature.
+                #[inline(always)]
                 pub fn detached_sign(msg: &[u8], sk: &SecretKey) -> DetachedSignature {
                     crate::detached_sign(msg, sk)
                 }
 
                 /// Verify a detached signature.
+                #[inline(always)]
                 pub fn verify_detached_signature(
                     sig: &DetachedSignature,
                     msg: &[u8],
@@ -296,16 +315,19 @@ macro_rules! define_implementation {
                 }
 
                 /// Get the number of bytes for a public key.
+                #[inline(always)]
                 pub fn public_key_bytes() -> usize {
                     crate::public_key_bytes::<$parameters>()
                 }
 
                 /// Get the number of bytes for a secret key.
+                #[inline(always)]
                 pub fn secret_key_bytes() -> usize {
                     crate::secret_key_bytes::<$parameters>()
                 }
 
                 /// Get the maximum number of bytes a signature occupies.
+                #[inline(always)]
                 pub fn signature_bytes() -> usize {
                     crate::signature_bytes::<$parameters>()
                 }
