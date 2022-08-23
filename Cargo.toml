@@ -7,7 +7,7 @@ homepage = "https://microsoft.github.io/Picnic/"
 repository = "https://github.com/ait-crypto/pqcrypto-picnic"
 license = "MIT"
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.60"
 keywords = ["signatures", "picnic"]
 categories = ["cryptography", "no-std"]
 
@@ -33,7 +33,11 @@ picnic3 = ["picnic-bindings/picnic3"]
 unruh-transform = ["picnic-bindings/unruh-transform"]
 system = ["picnic-bindings/system"]
 static-fallback = ["picnic-bindings/static-fallback"]
-serialization = ["picnic-bindings/serialization", "serde", "serde_bytes"]
+serialization = [
+    "picnic-bindings/serialization",
+    "dep:serde",
+    "dep:serde_bytes",
+]
 std = ["picnic-bindings/std", "pqcrypto-traits/std"]
 
 [package.metadata.docs.rs]
