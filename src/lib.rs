@@ -27,7 +27,7 @@ use core::mem;
 use paste::paste;
 pub use picnic_bindings::{self, Parameters};
 use picnic_bindings::{
-    signature::{Signature, Signer, Verifier},
+    signature::{Signer, Verifier},
     DynamicSignature, RawVerifier, SigningKey, VerificationKey,
 };
 pub use pqcrypto_traits::{
@@ -113,7 +113,7 @@ pub struct SignedMessage(
 impl SignedMessage {
     /// Pack message and a signature into a signed message
     fn pack(msg: &[u8], sig: DynamicSignature) -> Self {
-        let sig_data = sig.as_bytes();
+        let sig_data = sig.as_ref();
 
         let mut data = Vec::with_capacity(mem::size_of::<u32>() + msg.len() + sig_data.len());
         data.extend_from_slice(&(sig_data.len() as u32).to_le_bytes());
@@ -166,7 +166,7 @@ pub struct DetachedSignature(DynamicSignature);
 impl sign::DetachedSignature for DetachedSignature {
     #[inline]
     fn as_bytes(&self) -> &[u8] {
-        self.0.as_bytes()
+        self.0.as_ref()
     }
 
     #[inline]
