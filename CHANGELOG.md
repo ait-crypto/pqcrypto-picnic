@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0 (2024-08-01)
+
+* Bump picnic-bindings to 0.6
+
 ## 0.1.0 (2022-08-19)
 
 * Reduce number of re-exports
