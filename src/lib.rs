@@ -127,15 +127,23 @@ impl SignedMessage {
     }
 
     /// Unpack message and signature from the signed message
-    fn unpack(&self) -> Result<(&[u8], &[u8]), VerificationError> {
+    fn unpack(&self) -> pqcrypto_traits::Result<(&[u8], &[u8])> {
         let sm_len = self.0.len();
         if sm_len < mem::size_of::<u32>() {
-            return Err(VerificationError::InvalidSignature);
+            return Err(Error::BadLength {
+                name: "signature (signature length)",
+                actual: sm_len,
+                expected: mem::size_of::<u32>(),
+            });
         }
 
         let len = u32::from_le_bytes(self.0[..4].try_into().unwrap()) as usize;
         if sm_len < len + mem::size_of::<u32>() {
-            return Err(VerificationError::InvalidSignature);
+            return Err(Error::BadLength {
+                name: "signature (signature length and signature)",
+                actual: sm_len,
+                expected: len + mem::size_of::<u32>(),
+            });
         }
 
         let sig_offset = sm_len - len;
@@ -157,7 +165,10 @@ impl sign::SignedMessage for SignedMessage {
     where
         Self: Sized,
     {
-        Ok(SignedMessage(bytes.to_vec()))
+        let sm = SignedMessage(bytes.to_vec());
+        // try to unpack signature
+        sm.unpack()?;
+        Ok(sm)
     }
 }
 
@@ -214,7 +225,9 @@ pub(crate) fn open<'a, P>(
 where
     P: Parameters,
 {
-    let (message, signature) = sm.unpack()?;
+    let (message, signature) = sm
+        .unpack()
+        .map_err(|_| VerificationError::InvalidSignature)?;
     match pk.0.verify_raw(message, signature) {
         Ok(_) => Ok(message),
         Err(_) => Err(VerificationError::InvalidSignature),
@@ -482,3 +495,29 @@ define_implementation!(picnic_l5_ur, PicnicL5UR);
 define_implementation!(picnic_l5_full, PicnicL5Full);
 #[cfg(feature = "picnic3")]
 define_implementation!(picnic3_l5, Picnic3L5);
+
+#[cfg(test)]
+mod test {
+    #[cfg(not(feature = "std"))]
+    extern crate alloc;
+
+    #[cfg(not(feature = "std"))]
+    use alloc::vec::Vec;
+
+    use super::{sign::SignedMessage as _, SignedMessage};
+
+    #[test]
+    fn signature_from_bytes() {
+        assert!(SignedMessage::from_bytes(b"").is_err());
+        assert!(SignedMessage::from_bytes(b"\xff\xff\xff").is_err());
+
+        let bytes = 1234u32.to_le_bytes();
+        assert!(SignedMessage::from_bytes(&bytes).is_err());
+
+        let mut bytes = Vec::default();
+        bytes.extend_from_slice(&(14u32.to_le_bytes()));
+        bytes.extend_from_slice(b"some message");
+        bytes.extend_from_slice(b"some signature");
+        assert!(SignedMessage::from_bytes(&bytes).is_ok());
+    }
+}
