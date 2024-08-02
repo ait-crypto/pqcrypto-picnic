@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (2024-08-01)
+## 0.1.1 (2024-08-01)
 
 * Bump picnic-bindings to 0.6
 
