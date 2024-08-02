@@ -41,6 +41,7 @@ use serde::{Deserialize, Serialize};
 /// A Picnic secret key
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[repr(transparent)]
 pub struct SecretKey<P>(SigningKey<P>)
 where
     P: Parameters;
@@ -72,6 +73,7 @@ where
 /// A Picnic public key
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[repr(transparent)]
 pub struct PublicKey<P>(VerificationKey<P>)
 where
     P: Parameters;
@@ -106,6 +108,7 @@ where
 /// The length of the signature (u32 in little endian) is followed the message and then the signature.
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[repr(transparent)]
 pub struct SignedMessage(
     #[cfg_attr(feature = "serialization", serde(with = "serde_bytes"))] Vec<u8>,
 );
@@ -161,6 +164,7 @@ impl sign::SignedMessage for SignedMessage {
 /// A detached signature
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[repr(transparent)]
 pub struct DetachedSignature(DynamicSignature);
 
 impl sign::DetachedSignature for DetachedSignature {
