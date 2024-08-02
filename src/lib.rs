@@ -203,13 +203,16 @@ where
 
 /// Verify a signed message and return the message on success
 #[inline]
-pub(crate) fn open<P>(sm: &SignedMessage, pk: &PublicKey<P>) -> Result<Vec<u8>, VerificationError>
+pub(crate) fn open<'a, P>(
+    sm: &'a SignedMessage,
+    pk: &PublicKey<P>,
+) -> Result<&'a [u8], VerificationError>
 where
     P: Parameters,
 {
     let (message, signature) = sm.unpack()?;
     match pk.0.verify_raw(message, signature) {
-        Ok(_) => Ok(message.to_vec()),
+        Ok(_) => Ok(message),
         Err(_) => Err(VerificationError::InvalidSignature),
     }
 }
@@ -294,7 +297,7 @@ macro_rules! define_implementation {
 
                 /// Verify a signed message and return the message on success.
                 #[inline(always)]
-                pub fn open(sm: &SignedMessage, pk: &PublicKey) -> Result<Vec<u8>, VerificationError> {
+                pub fn open<'a>(sm: &'a SignedMessage, pk: &PublicKey) -> Result<&'a [u8], VerificationError> {
                     crate::open(sm, pk)
                 }
 
