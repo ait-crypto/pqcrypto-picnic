@@ -15,7 +15,7 @@
 //! assert_eq!(opened_msg, b"a message");
 //! # }
 
-#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(not(feature = "std"))]
 extern crate alloc;
@@ -276,9 +276,6 @@ macro_rules! define_implementation {
         paste! {
             #[doc = "Implementations of [pqcrypto_traits] for Picnic parameter set " $parameters]
             pub mod $name {
-                #[cfg(not(feature = "std"))]
-                use alloc::vec::Vec;
-
                 pub use crate::{DetachedSignature, Error, SignedMessage, VerificationError};
                 use picnic_bindings::$parameters;
 
