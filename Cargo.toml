@@ -24,7 +24,7 @@ serde_bytes = { version = "0.11", optional = true, default-features = false, fea
 
 [dev-dependencies]
 serde_json = "1.0"
-serde-bytes-repr = "0.1"
+serde-bytes-repr = "0.2"
 
 [features]
 default = ["std", "system", "static-fallback", "picnic", "picnic3"]
