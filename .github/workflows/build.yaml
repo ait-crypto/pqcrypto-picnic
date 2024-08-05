@@ -13,34 +13,24 @@ jobs:
       matrix:
         toolchain:
           - stable
-          - beta
+          - "1.60"
     name: Test w. shared library (${{matrix.toolchain}} toolchain)
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{matrix.toolchain}}
-          override: true
       - uses: Swatinem/rust-cache@v2
       - name: Install dependencies
         run: |
           sudo add-apt-repository -u -y ppa:s-ramacher/picnic
           sudo apt install libpicnic-dev pkg-config
       - name: Test with default features
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+        run: cargo test
       - name: Test with all features
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features
+        run: cargo test --all-features
       - name: Test without std feature
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features --features system --features picnic --features picnic3
+        run: cargo test --no-default-features --features system --features picnic --features picnic3
 
   test-static:
     runs-on: ${{ matrix.os }}
@@ -48,7 +38,7 @@ jobs:
       matrix:
         toolchain:
           - stable
-          - beta
+          - "1.60"
         os:
           - ubuntu-latest
           - windows-latest
@@ -58,54 +48,41 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{matrix.toolchain}}
-          override: true
       - uses: Swatinem/rust-cache@v2
       - name: Test with default features
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+        run: cargo test
       - name: Test with all features
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features
+        run: cargo test --all-features
 
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - name: Install dependencies
+        run: |
+          sudo add-apt-repository -u -y ppa:s-ramacher/picnic
+          sudo apt install libpicnic-dev pkg-config
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
           components: rustfmt
       - uses: Swatinem/rust-cache@v2
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+      - run: cargo fmt --all -- --check
 
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: clippy
-      - uses: Swatinem/rust-cache@v2
       - name: Install dependencies
         run: |
           sudo add-apt-repository -u -y ppa:s-ramacher/picnic
           sudo apt install libpicnic-dev pkg-config
-      - uses: actions-rs/clippy-check@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: -- -D warnings
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --all --all-features -- -D warnings
