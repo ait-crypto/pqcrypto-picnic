@@ -7,7 +7,7 @@ homepage = "https://microsoft.github.io/Picnic/"
 repository = "https://github.com/ait-crypto/pqcrypto-picnic"
 license = "MIT"
 edition = "2021"
-rust-version = "1.60"
+rust-version = "1.66"
 keywords = ["signatures", "picnic"]
 categories = ["cryptography", "no-std"]
 

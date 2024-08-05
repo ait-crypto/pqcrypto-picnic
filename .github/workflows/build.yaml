@@ -13,7 +13,7 @@ jobs:
       matrix:
         toolchain:
           - stable
-          - "1.60"
+          - "1.66"
     name: Test w. shared library (${{matrix.toolchain}} toolchain)
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +38,7 @@ jobs:
       matrix:
         toolchain:
           - stable
-          - "1.60"
+          - "1.66"
         os:
           - ubuntu-latest
           - windows-latest
