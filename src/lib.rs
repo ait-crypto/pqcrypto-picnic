@@ -38,6 +38,8 @@ pub use pqcrypto_traits::{
 #[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
+const LENGTH_SIZE: usize = mem::size_of::<u32>();
+
 /// A Picnic secret key
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
@@ -118,7 +120,7 @@ impl SignedMessage {
     fn pack(msg: &[u8], sig: DynamicSignature) -> Self {
         let sig_data = sig.as_ref();
 
-        let mut data = Vec::with_capacity(mem::size_of::<u32>() + msg.len() + sig_data.len());
+        let mut data = Vec::with_capacity(LENGTH_SIZE + msg.len() + sig_data.len());
         data.extend_from_slice(&(sig_data.len() as u32).to_le_bytes());
         data.extend_from_slice(msg);
         data.extend_from_slice(sig_data);
@@ -129,25 +131,25 @@ impl SignedMessage {
     /// Unpack message and signature from the signed message
     fn unpack(&self) -> pqcrypto_traits::Result<(&[u8], &[u8])> {
         let sm_len = self.0.len();
-        if sm_len < mem::size_of::<u32>() {
+        if sm_len < LENGTH_SIZE {
             return Err(Error::BadLength {
                 name: "signature (signature length)",
                 actual: sm_len,
-                expected: mem::size_of::<u32>(),
+                expected: LENGTH_SIZE,
             });
         }
 
         let len = u32::from_le_bytes(self.0[..4].try_into().unwrap()) as usize;
-        if sm_len < len + mem::size_of::<u32>() {
+        if sm_len < len + LENGTH_SIZE {
             return Err(Error::BadLength {
                 name: "signature (signature length and signature)",
                 actual: sm_len,
-                expected: len + mem::size_of::<u32>(),
+                expected: len + LENGTH_SIZE,
             });
         }
 
         let sig_offset = sm_len - len;
-        let message = &self.0[mem::size_of::<u32>()..sig_offset];
+        let message = &self.0[LENGTH_SIZE..sig_offset];
         let signature = &self.0[sig_offset..];
 
         Ok((message, signature))
