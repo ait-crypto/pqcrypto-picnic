@@ -367,6 +367,12 @@ macro_rules! define_implementation {
 
                 #[cfg(test)]
                 mod test {
+                    #[cfg(not(feature = "std"))]
+                    extern crate alloc;
+
+                    #[cfg(not(feature = "std"))]
+                    use alloc::vec::Vec;
+
                     use pqcrypto_traits::sign::{DetachedSignature as _, PublicKey as _, SecretKey as _, SignedMessage as _};
 
                     pub(crate) const MSG: &[u8] = b"test message";
