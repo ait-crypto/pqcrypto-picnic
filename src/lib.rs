@@ -38,11 +38,15 @@ pub use pqcrypto_traits::{
 #[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "zeroize")]
+use zeroize::{Zeroize, ZeroizeOnDrop};
+
 const LENGTH_SIZE: usize = mem::size_of::<u32>();
 
 /// A Picnic secret key
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "zeroize", derive(Zeroize, ZeroizeOnDrop))]
 #[repr(transparent)]
 pub struct SecretKey<P>(SigningKey<P>)
 where
