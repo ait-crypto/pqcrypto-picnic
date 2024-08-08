@@ -23,7 +23,7 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use core::mem;
+use core::{marker::PhantomData, mem};
 use paste::paste;
 pub use picnic_bindings::{self, Parameters};
 use picnic_bindings::{
@@ -111,66 +111,63 @@ where
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 #[repr(transparent)]
-pub struct SignedMessage(
+pub struct SignedMessage<P>(
     #[cfg_attr(feature = "serialization", serde(with = "serde_bytes"))] Vec<u8>,
-);
+    #[cfg_attr(feature = "serialization", serde(skip))] PhantomData<P>,
+)
+where
+    P: Parameters;
 
-impl SignedMessage {
-    /// Pack message and a signature into a signed message
-    fn pack(msg: &[u8], sig: DynamicSignature) -> Self {
-        let sig_data = sig.as_ref();
+/// Pack message and a signature into a signed message
+fn pack(msg: &[u8], sig: DynamicSignature) -> Vec<u8> {
+    let sig_data = sig.as_ref();
 
-        let mut data = Vec::with_capacity(LENGTH_SIZE + msg.len() + sig_data.len());
-        data.extend_from_slice(&(sig_data.len() as u32).to_le_bytes());
-        data.extend_from_slice(msg);
-        data.extend_from_slice(sig_data);
-
-        Self(data)
-    }
-
-    /// Unpack message and signature from the signed message
-    fn unpack(&self) -> pqcrypto_traits::Result<(&[u8], &[u8])> {
-        let sm_len = self.0.len();
-        if sm_len < LENGTH_SIZE {
-            return Err(Error::BadLength {
-                name: "signature (signature length)",
-                actual: sm_len,
-                expected: LENGTH_SIZE,
-            });
-        }
-
-        let len = u32::from_le_bytes(self.0[..4].try_into().unwrap()) as usize;
-        if sm_len < len + LENGTH_SIZE {
-            return Err(Error::BadLength {
-                name: "signature (signature length and signature)",
-                actual: sm_len,
-                expected: len + LENGTH_SIZE,
-            });
-        }
-
-        let sig_offset = sm_len - len;
-        let message = &self.0[LENGTH_SIZE..sig_offset];
-        let signature = &self.0[sig_offset..];
-
-        Ok((message, signature))
-    }
+    let mut data = Vec::with_capacity(LENGTH_SIZE + msg.len() + sig_data.len());
+    data.extend_from_slice(&(sig_data.len() as u32).to_le_bytes());
+    data.extend_from_slice(msg);
+    data.extend_from_slice(sig_data);
+    data
 }
 
-impl sign::SignedMessage for SignedMessage {
+/// Unpack message and signature from the signed message
+fn unpack(data: &[u8]) -> pqcrypto_traits::Result<(&[u8], &[u8])> {
+    let sm_len = data.len();
+    if sm_len < LENGTH_SIZE {
+        return Err(Error::BadLength {
+            name: "signature (signature length)",
+            actual: sm_len,
+            expected: LENGTH_SIZE,
+        });
+    }
+
+    let len = u32::from_le_bytes(data[..4].try_into().unwrap()) as usize;
+    if sm_len < len + LENGTH_SIZE {
+        return Err(Error::BadLength {
+            name: "signature (signature length and signature)",
+            actual: sm_len,
+            expected: len + LENGTH_SIZE,
+        });
+    }
+
+    let sig_offset = sm_len - len;
+    let message = &data[LENGTH_SIZE..sig_offset];
+    let signature = &data[sig_offset..];
+
+    Ok((message, signature))
+}
+
+impl<P> sign::SignedMessage for SignedMessage<P>
+where
+    P: Parameters,
+{
     #[inline]
     fn as_bytes(&self) -> &[u8] {
         self.0.as_slice()
     }
 
     #[inline]
-    fn from_bytes(bytes: &[u8]) -> pqcrypto_traits::Result<Self>
-    where
-        Self: Sized,
-    {
-        let sm = SignedMessage(bytes.to_vec());
-        // try to unpack signature
-        sm.unpack()?;
-        Ok(sm)
+    fn from_bytes(bytes: &[u8]) -> pqcrypto_traits::Result<Self> {
+        unpack(bytes).map(|_| SignedMessage(bytes.to_vec(), PhantomData))
     }
 }
 
@@ -178,9 +175,17 @@ impl sign::SignedMessage for SignedMessage {
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 #[repr(transparent)]
-pub struct DetachedSignature(DynamicSignature);
+pub struct DetachedSignature<P>(
+    DynamicSignature,
+    #[cfg_attr(feature = "serialization", serde(skip))] PhantomData<P>,
+)
+where
+    P: Parameters;
 
-impl sign::DetachedSignature for DetachedSignature {
+impl<P> sign::DetachedSignature for DetachedSignature<P>
+where
+    P: Parameters,
+{
     #[inline]
     fn as_bytes(&self) -> &[u8] {
         self.0.as_ref()
@@ -191,7 +196,10 @@ impl sign::DetachedSignature for DetachedSignature {
     where
         Self: Sized,
     {
-        Ok(DetachedSignature(DynamicSignature::from(bytes)))
+        Ok(DetachedSignature(
+            DynamicSignature::from(bytes),
+            PhantomData,
+        ))
     }
 }
 
@@ -210,26 +218,24 @@ where
 
 /// Sign a message
 #[inline]
-pub(crate) fn sign<P>(msg: &[u8], sk: &SecretKey<P>) -> SignedMessage
+pub(crate) fn sign<P>(msg: &[u8], sk: &SecretKey<P>) -> SignedMessage<P>
 where
     P: Parameters,
 {
     let sig = sk.0.sign(msg);
-    SignedMessage::pack(msg, sig)
+    SignedMessage(pack(msg, sig), PhantomData)
 }
 
 /// Verify a signed message and return the message on success
 #[inline]
 pub(crate) fn open<'a, P>(
-    sm: &'a SignedMessage,
+    sm: &'a SignedMessage<P>,
     pk: &PublicKey<P>,
 ) -> Result<&'a [u8], VerificationError>
 where
     P: Parameters,
 {
-    let (message, signature) = sm
-        .unpack()
-        .map_err(|_| VerificationError::InvalidSignature)?;
+    let (message, signature) = unpack(&sm.0).map_err(|_| VerificationError::InvalidSignature)?;
     match pk.0.verify_raw(message, signature) {
         Ok(_) => Ok(message),
         Err(_) => Err(VerificationError::InvalidSignature),
@@ -238,17 +244,17 @@ where
 
 /// Generate a detached signature
 #[inline]
-pub(crate) fn detached_sign<P>(msg: &[u8], sk: &SecretKey<P>) -> DetachedSignature
+pub(crate) fn detached_sign<P>(msg: &[u8], sk: &SecretKey<P>) -> DetachedSignature<P>
 where
     P: Parameters,
 {
-    DetachedSignature(sk.0.sign(msg))
+    DetachedSignature(sk.0.sign(msg), PhantomData)
 }
 
 /// Verify a detached signature
 #[inline]
 pub(crate) fn verify_detached_signature<P>(
-    sig: &DetachedSignature,
+    sig: &DetachedSignature<P>,
     msg: &[u8],
     pk: &PublicKey<P>,
 ) -> Result<(), VerificationError>
@@ -291,13 +297,17 @@ macro_rules! define_implementation {
         paste! {
             #[doc = "Implementations of [pqcrypto_traits] for Picnic parameter set " $parameters]
             pub mod $name {
-                pub use crate::{DetachedSignature, Error, SignedMessage, VerificationError};
+                pub use crate::{Error, VerificationError};
                 use picnic_bindings::$parameters;
 
                 /// A Picnic secret key
                 pub type SecretKey = crate::SecretKey<$parameters>;
                 /// A Picnic public key
                 pub type PublicKey = crate::PublicKey<$parameters>;
+                /// A message signed with Picnic
+                pub type SignedMessage = crate::SignedMessage<$parameters>;
+                /// A detached Picnic signature
+                pub type DetachedSignature = crate::DetachedSignature<$parameters>;
 
                 /// Generate a new Picnic key pair.
                 #[inline(always)]
@@ -353,11 +363,15 @@ macro_rules! define_implementation {
 
                 #[cfg(test)]
                 mod test {
+                    use pqcrypto_traits::sign::{DetachedSignature as _, PublicKey as _, SecretKey as _, SignedMessage as _};
+
                     pub(crate) const MSG: &[u8] = b"test message";
 
                     #[test]
                     fn keypair() {
-                        super::keypair();
+                        let (sk, pk) = super::keypair();
+                        assert_eq!(sk.as_bytes().len(), super::secret_key_bytes());
+                        assert_eq!(pk.as_bytes().len(), super::public_key_bytes());
                     }
 
                     #[test]
@@ -365,6 +379,7 @@ macro_rules! define_implementation {
                         let (sk, pk) = super::keypair();
                         let sig = super::sign(MSG, &sk);
                         assert_eq!(super::open(&sig, &pk).unwrap(), MSG);
+                        assert!(sig.as_bytes().len() <= super::signature_bytes() + MSG.len() + crate::LENGTH_SIZE)
                     }
 
                     #[test]
@@ -372,6 +387,7 @@ macro_rules! define_implementation {
                         let (sk, pk) = super::keypair();
                         let sig = super::detached_sign(MSG, &sk);
                         assert!(super::verify_detached_signature(&sig, MSG, &pk).is_ok());
+                        assert!(sig.as_bytes().len() <= super::signature_bytes());
                         assert!(super::verify_detached_signature(&sig, b"other msg", &pk).is_err());
                     }
 
@@ -380,6 +396,21 @@ macro_rules! define_implementation {
                         assert!(super::public_key_bytes() > 0);
                         assert!(super::secret_key_bytes() > 0);
                         assert!(super::signature_bytes() > 0);
+                    }
+
+                    #[test]
+                    fn signature_from_bytes() {
+                        assert!(super::SignedMessage::from_bytes(b"").is_err());
+                        assert!(super::SignedMessage::from_bytes(b"\xff\xff\xff").is_err());
+
+                        let bytes = 1234u32.to_le_bytes();
+                        assert!(super::SignedMessage::from_bytes(&bytes).is_err());
+
+                        let mut bytes = Vec::default();
+                        bytes.extend_from_slice(&(14u32.to_le_bytes()));
+                        bytes.extend_from_slice(b"some message");
+                        bytes.extend_from_slice(b"some signature");
+                        assert!(super::SignedMessage::from_bytes(&bytes).is_ok());
                     }
                 }
 
@@ -497,29 +528,3 @@ define_implementation!(picnic_l5_ur, PicnicL5UR);
 define_implementation!(picnic_l5_full, PicnicL5Full);
 #[cfg(feature = "picnic3")]
 define_implementation!(picnic3_l5, Picnic3L5);
-
-#[cfg(test)]
-mod test {
-    #[cfg(not(feature = "std"))]
-    extern crate alloc;
-
-    #[cfg(not(feature = "std"))]
-    use alloc::vec::Vec;
-
-    use super::{sign::SignedMessage as _, SignedMessage};
-
-    #[test]
-    fn signature_from_bytes() {
-        assert!(SignedMessage::from_bytes(b"").is_err());
-        assert!(SignedMessage::from_bytes(b"\xff\xff\xff").is_err());
-
-        let bytes = 1234u32.to_le_bytes();
-        assert!(SignedMessage::from_bytes(&bytes).is_err());
-
-        let mut bytes = Vec::default();
-        bytes.extend_from_slice(&(14u32.to_le_bytes()));
-        bytes.extend_from_slice(b"some message");
-        bytes.extend_from_slice(b"some signature");
-        assert!(SignedMessage::from_bytes(&bytes).is_ok());
-    }
-}
