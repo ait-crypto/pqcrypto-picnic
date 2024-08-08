@@ -12,6 +12,7 @@ This crate supports the following features:
 * `static-fallback` (default): Build Picnic on demand if shared library is not available.
 * `std` (default): Use `std`.
 * `serialization`: Enable serialization with [serde](https://serde.rs).
+* `zeroize`: Enable zeroization of secret keys with the `zeroize` crate.
 
 If the crate is not built with `std` enabled, the `alloc` crates is used.
 
