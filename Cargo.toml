@@ -27,7 +27,7 @@ zeroize = { version = "1.5", optional = true, default-features = false, features
 
 [dev-dependencies]
 serde_json = "1.0"
-serde-bytes-repr = "0.2"
+serde-bytes-repr = "0.3"
 
 [features]
 default = ["std", "system", "static-fallback", "picnic", "picnic3"]
