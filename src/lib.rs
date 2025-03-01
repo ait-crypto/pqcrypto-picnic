@@ -27,12 +27,12 @@ use core::{marker::PhantomData, mem};
 use paste::paste;
 pub use picnic_bindings::{self, Parameters};
 use picnic_bindings::{
-    signature::{Signer, Verifier},
     DynamicSignature, RawVerifier, SigningKey, VerificationKey,
+    signature::{Signer, Verifier},
 };
 pub use pqcrypto_traits::{
-    sign::{self, VerificationError},
     Error,
+    sign::{self, VerificationError},
 };
 
 #[cfg(feature = "serialization")]
