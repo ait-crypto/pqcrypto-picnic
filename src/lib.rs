@@ -24,7 +24,7 @@ extern crate alloc;
 use alloc::vec::Vec;
 
 use core::{marker::PhantomData, mem};
-use paste::paste;
+use pastey::paste;
 pub use picnic_bindings::{self, Parameters};
 use picnic_bindings::{
     DynamicSignature, RawVerifier, SigningKey, VerificationKey,

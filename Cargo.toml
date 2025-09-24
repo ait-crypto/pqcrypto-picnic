@@ -14,7 +14,7 @@ categories = ["cryptography", "no-std"]
 [dependencies]
 picnic-bindings = { version = "0.6.0", default-features = false }
 pqcrypto-traits = { version = "0.3.4", default-features = false }
-paste = "1"
+pastey = "0.1"
 serde = { package = "serde", version = "1", optional = true, default-features = false, features = [
     "derive",
 ] }
