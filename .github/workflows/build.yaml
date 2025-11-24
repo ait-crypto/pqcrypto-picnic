@@ -16,7 +16,7 @@ jobs:
           - "1.85"
     name: Test w. shared library (${{matrix.toolchain}} toolchain)
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.toolchain}}
@@ -45,7 +45,7 @@ jobs:
           - macos-latest
     name: Test w. static-fallback (${{matrix.toolchain}} toolchain, ${{ matrix.os }})
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@master
@@ -61,7 +61,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           sudo add-apt-repository -u -y ppa:s-ramacher/picnic
@@ -76,7 +76,7 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           sudo add-apt-repository -u -y ppa:s-ramacher/picnic
