@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 (2026-05-05)
+
+* Update to `picnic-bindings` 0.7
+* Migrate to `pastey`
+* Bump edition to 2024
+
 ## 0.2.0 (2024-08-08)
 
 * Add `zeroize` support
